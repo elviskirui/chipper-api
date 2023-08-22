@@ -152,11 +152,13 @@ After implementing the feature, commit your work using the following commands:
 
 ## 4. Import users
 
-We are looking for a swift method to import users into Chipper. The objective of this task is to develop a Laravel command that can retrieve a list of users from a public JSON file's URL and subsequently create a user for each element.
+We are looking for a swift method to import users into Chipper. The objective of this task is to develop a Laravel command that can retrieve a list of users from a public JSON file's URL and subsequently create a user for each element up to a given limit.
 
-The JSON file must follow the following structure: https://jsonplaceholder.typicode.com/users. Please use this URL during your development.
+The command should receive two parameters: URL of the JSON and limit number of users to import.
 
-Ensure that unit tests are provided for this feature.
+The JSON file will always follow this structure: https://jsonplaceholder.typicode.com/users. Please use this URL during your development.
+
+Ensure that the corresponsing tests are provided for this feature.
 
 ✋ **BEFORE YOU BEGIN**
 
@@ -172,7 +174,7 @@ Please make sure to commit this right before you start working on the task.
 🏁 **ONCE YOU HAVE COMPLETED THE TASK**
 
 After implementing the feature, commit your work using the following commands:
-`git add -A && git commit -m "Added command to import dummy users" && git push`
+`git add -A && git commit -m "Added command to import users" && git push`
 
 # Ready for the next challenge?
 
