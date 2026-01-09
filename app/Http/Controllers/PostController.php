@@ -7,6 +7,8 @@ use App\Models\Post;
 use App\Http\Requests\CreatePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Http\Requests\DestroyPostRequest;
+use App\Jobs\SendFavoritesNotificationJob;
+use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 
 /**
  * @group Posts
@@ -25,13 +27,19 @@ class PostController extends Controller
     {
         $user = $request->user();
 
+        $imageUrl = null;
+        if ($request->hasFile('image')) {
+            $imageUrl = $request->file('image')->store('posts', 'public');
+        }
         // Create a new post
         $post = Post::create([
             'title' => $request->input('title'),
             'body' => $request->input('body'),
             'user_id' => $user->id,
+            'image_url' => $imageUrl
         ]);
 
+        dispatch(new SendFavoritesNotificationJob($post, $user));
         return new PostResource($post);
     }
 

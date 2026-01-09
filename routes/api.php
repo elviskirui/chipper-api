@@ -31,4 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('favorites', [FavoriteController::class, 'index'])->name('favorites.index');
     Route::post('posts/{post}/favorite', [FavoriteController::class, 'store'])->name('favorites.store');
     Route::delete('posts/{post}/favorite', [FavoriteController::class, 'destroy'])->name('favorites.destroy');
+
+    Route::post('users/{user}/favorite', [FavoriteController::class, 'storeUserFavourite'])->name('favorites.users.store');
+    Route::delete('users/{user}/favorite', [FavoriteController::class, 'destroyUserFavourite'])->name('favorites.users.destroy');
 });
