@@ -180,4 +180,111 @@ class FavoriteTest extends TestCase
             'user_id' => $user1->id,
         ]);
     }
+
+    public function test_returns_users_user_favorites()
+    {
+        $user = User::factory()->create();
+        $post = Post::factory()->create();
+        $user2 = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson(route('favorites.store', ['post' => $post]))
+            ->assertCreated();
+
+        $this->actingAs($user)
+            ->postJson(route('favorites.users.store', ['user' => $user2]))
+            ->assertCreated();
+
+        $response = $this->actingAs($user)
+            ->getJson(route('favorites.index'))
+            ->assertOk();
+
+        $response->assertJsonCount(1, 'data.posts')
+            ->assertJsonCount(1, 'data.users');
+    }
+    public function test_returns_empty_favorites_when_user_has_no_favorites()
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->getJson(route('favorites.index'))
+            ->assertOk();
+
+        $response->assertJsonCount(0, 'data.posts')
+            ->assertJsonCount(0, 'data.users');
+    }
+    public function test_returns_users_post_favorites()
+    {
+        $user = User::factory()->create();
+        $post = Post::factory()->create();
+        $post2 = Post::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson(route('favorites.store', ['post' => $post]))
+            ->assertCreated();
+
+        $this->actingAs($user)
+            ->postJson(route('favorites.store', ['post' => $post2]))
+            ->assertCreated();
+
+        $response = $this->actingAs($user)
+            ->getJson(route('favorites.index'))
+            ->assertOk();
+
+        $response->assertJsonCount(2, 'data.posts')
+            ->assertJsonCount(0, 'data.users');
+    }
+
+    public function test_returns_correct_post_favorites_for_different_users()
+    {
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
+        $post1 = Post::factory()->create();
+        $post2 = Post::factory()->create();
+
+        $this->actingAs($user1)
+            ->postJson(route('favorites.store', ['post' => $post1]))
+            ->assertCreated();
+
+        $this->actingAs($user2)
+            ->postJson(route('favorites.store', ['post' => $post2]))
+            ->assertCreated();
+
+        $response1 = $this->actingAs($user1)
+            ->getJson(route('favorites.index'))
+            ->assertOk();
+
+        $response1->assertJsonCount(1, 'data.posts')
+            ->assertJsonCount(0, 'data.users')
+            ->assertJsonFragment(['id' => $post1->id])
+            ->assertJsonMissing(['id' => $post2->id]);
+
+        $response2 = $this->actingAs($user2)
+            ->getJson(route('favorites.index'))
+            ->assertOk();
+
+        $response2->assertJsonCount(1, 'data.posts')
+            ->assertJsonCount(0, 'data.users')
+            ->assertJsonFragment(['id' => $post2->id])
+            ->assertJsonMissing(['id' => $post1->id]);
+    }
+
+
+
+    public function test_returns_empty_post_favorites_when_user_has_no_post_favorites()
+    {
+        $user = User::factory()->create();
+        $user2 = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson(route('favorites.users.store', ['user' => $user2]))
+            ->assertCreated();
+
+        $response = $this->actingAs($user)
+            ->getJson(route('favorites.index'))
+            ->assertOk();
+
+        $response->assertJsonCount(0, 'data.posts')
+            ->assertJsonCount(1, 'data.users');
+    }
 }
