@@ -7,6 +7,8 @@ use App\Models\Post;
 use App\Http\Requests\CreatePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Http\Requests\DestroyPostRequest;
+use App\Jobs\SendFavoritesNotificationJob;
+use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 
 /**
  * @group Posts
@@ -32,6 +34,7 @@ class PostController extends Controller
             'user_id' => $user->id,
         ]);
 
+        dispatch(new SendFavoritesNotificationJob($post, $user));
         return new PostResource($post);
     }
 

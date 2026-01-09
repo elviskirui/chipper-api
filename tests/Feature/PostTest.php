@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use Illuminate\Support\Arr;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\NewPostNotification;
 use Tests\TestCase;
 
 class PostTest extends TestCase
@@ -33,7 +35,9 @@ class PostTest extends TestCase
         $response->assertCreated()
             ->assertJsonStructure([
                 'data' => [
-                    'id', 'title', 'body',
+                    'id',
+                    'title',
+                    'body',
                 ]
             ])
             ->assertJson([
@@ -124,5 +128,47 @@ class PostTest extends TestCase
         $this->assertDatabaseMissing('posts', [
             'id' => $id,
         ]);
+    }
+
+    public function test_notification_is_sent_to_multiple_favorite_users()
+    {
+        Notification::fake();
+
+        $postCreator = User::factory()->create();
+        $favoriteUser1 = User::factory()->create();
+        $favoriteUser2 = User::factory()->create();
+        $nonFavoriteUser = User::factory()->create();
+
+        $this->actingAs($favoriteUser1)->postJson(route('favorites.storeUserFavourite', ['user' => $postCreator->id]));
+        $this->actingAs($favoriteUser2)->postJson(route('favorites.storeUserFavourite', ['user' => $postCreator->id]));
+
+
+        $response = $this->actingAs($postCreator)->postJson(route('posts.store'), [
+            'title' => 'Test Post',
+            'body' => 'This is a test post.',
+        ]);
+
+        $response->assertCreated();
+
+        Notification::assertSentTo($favoriteUser1, NewPostNotification::class);
+        Notification::assertSentTo($favoriteUser2, NewPostNotification::class);
+
+        Notification::assertNotSentTo($nonFavoriteUser, NewPostNotification::class);
+    }
+
+    public function test_notification_is_not_sent_when_no_favorite_users()
+    {
+        Notification::fake();
+
+        $postCreator = User::factory()->create();
+
+        $response = $this->actingAs($postCreator)->postJson(route('posts.store'), [
+            'title' => 'Test Post',
+            'body' => 'This is a test post.',
+        ]);
+
+        $response->assertCreated();
+
+        Notification::assertNothingSent();
     }
 }
